@@ -158,6 +158,8 @@ tg bot/
 ├── config.example.py   # Configuration template (copy to config.py)
 ├── config.py           # Configuration settings (create from example, NOT in git)
 ├── requirements.txt    # Python dependencies
+├── start.sh            # Startup script for deployment platforms
+├── .python-version     # Python version specification
 ├── README.md           # This file
 ├── .gitignore          # Git ignore rules
 └── commissions.db      # SQLite database (created automatically, NOT in git)
@@ -296,9 +298,16 @@ Delete `commissions.db` file - the bot will recreate it with fresh empty tables 
 
 **Authorization issues?**
 
-- Verify `OWNER_USER_ID` is set correctly in `config.py`
+- Verify `OWNER_USER_ID` is set correctly in `config.py` or environment variables
 - Check that you're using the correct Telegram user ID
 - Ensure the bot is running when authorization requests are sent
+
+**Deployment issues?**
+
+- **ModuleNotFoundError**: Make sure `start.sh` is used as the run command, or set PYTHONPATH correctly
+- **Invalid Token**: Verify `BOT_TOKEN` environment variable is set correctly with the complete token
+- **Conflict Error**: Only one bot instance can run at a time. Stop local instance when deploying to cloud
+- **Config not found**: The `start.sh` script creates `config.py` from environment variables automatically
 
 ## 📄 License
 
