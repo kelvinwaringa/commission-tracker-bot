@@ -6,6 +6,8 @@ import logging
 from decimal import Decimal
 from datetime import datetime
 import pytz
+import asyncio
+from aiohttp import web
 from telegram import (
     Update,
     InlineKeyboardButton,
@@ -1372,6 +1374,27 @@ def main():
 
     # Add post_init to start scheduler after event loop is running
     application.post_init = post_init
+
+    # Start health check server for cloud platforms
+    async def health_check():
+        """Simple HTTP health check server for cloud platforms"""
+        app = web.Application()
+        
+        async def health_handler(request):
+            return web.Response(text="OK", status=200)
+        
+        app.router.add_get("/", health_handler)
+        app.router.add_get("/health", health_handler)
+        
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "0.0.0.0", 8000)
+        await site.start()
+        logger.info("Health check server started on port 8000")
+    
+    # Start health check in background
+    loop = asyncio.get_event_loop()
+    loop.create_task(health_check())
 
     # Start bot
     logger.info("Bot starting...")
