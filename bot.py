@@ -3,10 +3,10 @@ Main Telegram Bot for Commission Tracker
 """
 
 import logging
+import asyncio
 from decimal import Decimal
 from datetime import datetime
 import pytz
-import asyncio
 from aiohttp import web
 from telegram import (
     Update,
