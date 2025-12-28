@@ -1300,8 +1300,6 @@ async def post_init(application: Application) -> None:
     asyncio.create_task(health_check())
     
     # Set up menu buttons after a short delay to ensure bot is fully initialized
-    import asyncio
-
     await asyncio.sleep(2)  # Wait 2 seconds for bot to fully initialize
 
     try:
