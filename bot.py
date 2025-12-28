@@ -1272,13 +1272,33 @@ def setup_scheduler(app: Application):
     return scheduler
 
 
+async def health_check():
+    """Simple HTTP health check server for cloud platforms"""
+    app = web.Application()
+    
+    async def health_handler(request):
+        return web.Response(text="OK", status=200)
+    
+    app.router.add_get("/", health_handler)
+    app.router.add_get("/health", health_handler)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8000)
+    await site.start()
+    logger.info("Health check server started on port 8000")
+
+
 async def post_init(application: Application) -> None:
     """Start scheduler after application is initialized"""
     scheduler = application.bot_data.get("scheduler")
     if scheduler:
         scheduler.start()
         logger.info("Scheduler started")
-
+    
+    # Start health check server
+    asyncio.create_task(health_check())
+    
     # Set up menu buttons after a short delay to ensure bot is fully initialized
     import asyncio
 
@@ -1374,27 +1394,6 @@ def main():
 
     # Add post_init to start scheduler after event loop is running
     application.post_init = post_init
-
-    # Start health check server for cloud platforms
-    async def health_check():
-        """Simple HTTP health check server for cloud platforms"""
-        app = web.Application()
-        
-        async def health_handler(request):
-            return web.Response(text="OK", status=200)
-        
-        app.router.add_get("/", health_handler)
-        app.router.add_get("/health", health_handler)
-        
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, "0.0.0.0", 8000)
-        await site.start()
-        logger.info("Health check server started on port 8000")
-    
-    # Start health check in background
-    loop = asyncio.get_event_loop()
-    loop.create_task(health_check())
 
     # Start bot
     logger.info("Bot starting...")
