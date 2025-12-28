@@ -177,6 +177,46 @@ The bot uses SQLite with the following tables:
 - **authorized_users**: List of authorized users (for access control)
 - **pending_authorizations**: Pending authorization requests
 
+## 🚀 Deployment
+
+### Cloud Hosting (24/7)
+
+The bot is ready for deployment on cloud platforms. Recommended platforms:
+
+- **Koyeb** (Free tier available) - ✅ Tested and working
+- **Railway** ($5 free credit/month)
+- **Render** (Free tier, sleeps after inactivity)
+- **Fly.io** (Free tier available)
+
+#### Deployment Steps
+
+1. **Push to GitHub** (already done if you followed setup)
+
+2. **Deploy on your chosen platform**:
+   - Connect your GitHub repository
+   - Set environment variables:
+     - `BOT_TOKEN` - Your Telegram bot token
+     - `OWNER_USER_ID` - Your Telegram user ID
+     - `DATABASE_PATH` - Optional (default: `commissions.db`)
+     - `TIMEZONE` - Optional (default: `Africa/Nairobi`)
+
+3. **Configure build settings**:
+   - **Build command**: Leave empty (buildpack handles it)
+   - **Run command**: `bash start.sh` or `cd /workspace && python bot.py`
+   - **Python version**: 3.11 (specified in `.python-version`)
+
+4. **Important Notes**:
+   - The `start.sh` script creates `config.py` from environment variables at runtime
+   - Only one bot instance should run at a time (stop local instance when deploying)
+   - Database persistence: SQLite files may not persist on some platforms (consider using volumes or external databases)
+
+#### Koyeb Specific
+
+- Use Buildpack (auto-detects Python)
+- Run command: `bash start.sh`
+- Environment variables are set in the Variables section
+- The startup script handles `config.py` creation automatically
+
 ## ⚙️ Configuration
 
 Edit `config.py` to customize:
