@@ -453,7 +453,9 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     formatted_month = f"{month_name} {year}"
 
     response = "💰 **Balance Summary**\n"
-    response += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    # Separator line matching the length of "Balance Summary"
+    separator_length = len("Balance Summary")
+    response += "━" * separator_length + "\n"
     response += f"📅 {formatted_month}\n\n"
     response += "**BALANCES**\n"
     response += f"💵 Total:             {format_kes(stats['total_commission'])}\n"
