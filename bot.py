@@ -442,11 +442,63 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     stats = calculate_monthly_stats(commissions, payouts)
 
-    response = "💰 **Balance Summary**\n\n"
-    response += f"📅 Current Month: {month}\n\n"
-    response += f"🤝 Partner Share: {format_kes(stats['split_partner'])}\n"
-    response += f"💸 Payouts Made: {format_kes(stats['total_payouts'])}\n"
-    response += f"💵 **Owed to Partner: {format_kes(stats['owed_to_partner'])}**\n"
+    # Format month name nicely (e.g., "2025-12" -> "December 2025")
+    month_names = {
+        "01": "January", "02": "February", "03": "March", "04": "April",
+        "05": "May", "06": "June", "07": "July", "08": "August",
+        "09": "September", "10": "October", "11": "November", "12": "December"
+    }
+    month_num = month.split("-")[1]
+    month_name = month_names.get(month_num, month)
+    formatted_month = f"{month_name} {year}"
+
+    response = "💰 **Balance Summary**\n"
+    response += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    response += f"📅 {formatted_month}\n\n"
+    response += "**BALANCES**\n"
+    response += f"💵 Total:             {format_kes(stats['total_commission'])}\n"
+    response += f"👤 Your Share:        {format_kes(stats['split_user'])}\n"
+    response += f"🤝 Partner Share:     {format_kes(stats['split_partner'])}\n\n"
+
+    # Performance section
+    if stats['entries_count'] > 0:
+        response += "📊 **Performance**\n"
+        response += f"   Entries: {stats['entries_count']} | Avg: {format_kes(stats['average_per_entry'])}\n"
+        
+        if stats['largest_entry']:
+            largest_amount = format_kes(Decimal(stats['largest_entry']['amount']))
+            response += f"   Largest: {largest_amount}"
+        else:
+            response += "   Largest: KES 0.00"
+        
+        if stats['smallest_entry']:
+            smallest_amount = format_kes(Decimal(stats['smallest_entry']['amount']))
+            response += f" | Smallest: {smallest_amount}\n"
+        else:
+            response += " | Smallest: KES 0.00\n"
+        
+        response += "\n"
+    else:
+        response += "📊 **Performance**\n"
+        response += "   Entries: 0 | Avg: KES 0.00\n"
+        response += "   Largest: KES 0.00 | Smallest: KES 0.00\n\n"
+
+    # Activity section
+    response += f"📅 **Activity:** {stats['days_active']} active days, {stats['days_inactive']} inactive\n\n"
+
+    # Top 3 Weeks section
+    if stats.get('weekly_totals') and len(stats['weekly_totals']) > 0:
+        # Sort weekly totals by amount (descending) and get top 3
+        weekly_items = sorted(
+            stats['weekly_totals'].items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:3]
+        
+        if weekly_items:
+            response += "🏆 **Top 3 Weeks**\n"
+            for i, (week, total) in enumerate(weekly_items, 1):
+                response += f"   {i}. {week}: {format_kes(total)}\n"
 
     if hasattr(message, "reply_text"):
         await message.reply_text(response, parse_mode="Markdown")  # type: ignore
