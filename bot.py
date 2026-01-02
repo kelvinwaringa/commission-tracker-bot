@@ -57,6 +57,12 @@ db = Database()
 last_commissions = {}  # {user_id: {commission_id, timestamp}}
 
 
+def get_current_time():
+    """Get current time in the configured timezone"""
+    tz = pytz.timezone(config.DEFAULT_TIMEZONE)
+    return datetime.now(tz)
+
+
 def check_authorization(user_id: int) -> bool:
     """Check if user is authorized"""
     # Owner is always authorized
@@ -133,7 +139,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if user.username:
                     owner_message += f"📱 Username: @{user.username}\n"
                 owner_message += (
-                    f"\n⏰ Requested: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"\n⏰ Requested: {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}\n"
                 )
                 owner_message += "\nChoose an action:"
 
@@ -295,7 +301,7 @@ async def handle_commission_message(update: Update, context: ContextTypes.DEFAUL
     # Store for undo
     last_commissions[user_id] = {
         "commission_id": commission_id,
-        "timestamp": datetime.now(),
+        "timestamp": get_current_time(),
     }
 
     # Get month total after adding this commission
@@ -316,7 +322,7 @@ async def handle_commission_message(update: Update, context: ContextTypes.DEFAUL
     response += f"👤 Your Total: {format_kes(month_split_user)}\n"  # type: ignore
     response += f"🤝 Partner Total: {format_kes(month_split_partner)}\n"  # type: ignore  # type: ignore
     response += f"\n📅 Month: {month}\n"
-    response += f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    response += f"⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
 
     await update.message.reply_text(response, parse_mode="Markdown")
 
@@ -362,7 +368,7 @@ async def handle_yes_no(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         last_commissions[user_id] = {
             "commission_id": commission_id,
-            "timestamp": datetime.now(),
+            "timestamp": get_current_time(),
         }
 
         # Get month total after adding this commission
@@ -381,7 +387,7 @@ async def handle_yes_no(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response += f"💰 Total: {format_kes(month_total)}\n"  # type: ignore
         response += f"👤 Your Total: {format_kes(month_split_user)}\n"  # type: ignore
         response += f"🤝 Partner Total: {format_kes(month_split_partner)}\n"  # type: ignore
-        response += f"\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        response += f"\n⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
 
         await update.message.reply_text(response, parse_mode="Markdown")
         del context.user_data["pending_commission"]
@@ -585,7 +591,7 @@ async def paid(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response += "\n\n"
     response += f"💸 Total Payouts for {month}: {format_kes(stats['total_payouts'])}\n"
     response += f"💵 Remaining Owed: {format_kes(stats['owed_to_partner'])}\n"
-    response += f"\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    response += f"\n⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
 
     await update.message.reply_text(response, parse_mode="Markdown")
 
@@ -605,7 +611,7 @@ async def undo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     last_comm = last_commissions[user_id]
-    time_diff = (datetime.now() - last_comm["timestamp"]).total_seconds() / 60
+    time_diff = (get_current_time() - last_comm["timestamp"]).total_seconds() / 60
 
     if time_diff > config.UNDO_WINDOW_MINUTES:
         await update.message.reply_text(
@@ -642,9 +648,9 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 year = int(context.args[1])
             except (ValueError, TypeError, IndexError):
-                year = datetime.now().year
+                year = get_current_time().year
         else:
-            year = datetime.now().year
+            year = get_current_time().year
 
         monthly_summaries = db.get_all_monthly_summaries(user_id, year)
 
@@ -709,9 +715,9 @@ async def yearly(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             year = int(context.args[0])
         except (ValueError, TypeError):
-            year = datetime.now().year
+            year = get_current_time().year
     else:
-        year = datetime.now().year
+        year = get_current_time().year
 
     monthly_summaries = db.get_all_monthly_summaries(user_id, year)
     all_commissions = []
@@ -1122,7 +1128,7 @@ async def send_weekly_summary(context):
         message += f"🤝 Partner Share: {format_kes(stats['split_partner'])}\n"
         message += f"📝 Entries This Month: {stats['entries_count']}\n"
         message += f"📅 Active Days: {stats['days_active']}\n"
-        message += f"\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        message += f"\n⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
 
         try:
             await app.bot.send_message(
@@ -1160,7 +1166,7 @@ async def send_month_end_summary(context):
         if payouts:
             message += f"💸 Payouts Made: {format_kes(stats['total_payouts'])}\n"
             message += f"💵 Owed to Partner: {format_kes(stats['owed_to_partner'])}\n"
-        message += f"\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        message += f"\n⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}\n"
         message += "\n✅ Month closed and locked."
 
         try:
@@ -1187,7 +1193,7 @@ async def start_new_month(context):
         message += f"📅 Current Month: {month}\n"
         message += "💰 Starting Balance: KES 0.00\n"
         message += "\nReady to track commissions! Just send a number to add an entry.\n"
-        message += f"\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        message += f"\n⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
 
         try:
             await app.bot.send_message(
@@ -1221,7 +1227,7 @@ async def send_payout_reminder(context):
             message += f"💵 **Remaining: {format_kes(stats['owed_to_partner'])}**\n"
         else:
             message += f"💵 **Total Owed: {format_kes(stats['owed_to_partner'])}**\n"
-        message += f"\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        message += f"\n⏰ {get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
 
         try:
             await app.bot.send_message(
@@ -1254,8 +1260,13 @@ async def check_zero_activity(context):
             last_date = date_parser.parse(last_comm["date_added"])
             if isinstance(last_date, datetime) and not last_date.tzinfo:
                 last_date = pytz.UTC.localize(last_date)
+            
+            # Convert to configured timezone for comparison
+            tz = pytz.timezone(config.DEFAULT_TIMEZONE)
+            if last_date.tzinfo != tz:
+                last_date = last_date.astimezone(tz)
 
-            days_since = (datetime.now(pytz.UTC) - last_date).days
+            days_since = (get_current_time() - last_date).days
 
             if days_since >= config.ZERO_ACTIVITY_DAYS:
                 message = "⚠️ **Zero Activity Alert**\n\n"
