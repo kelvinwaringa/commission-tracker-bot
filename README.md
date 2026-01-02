@@ -207,6 +207,11 @@ The bot is ready for deployment on cloud platforms. Recommended platforms:
 
 4. **Important Notes**:
    - The `start.sh` script creates `config.py` from environment variables at runtime
+   - **⚠️ Database Persistence**: By default, cloud platforms use ephemeral storage, which means your database will be lost on restart/redeploy
+   - **Solutions for persistent storage**:
+     - **Koyeb**: Enable persistent volumes in your service settings (may require paid plan)
+     - **Alternative**: Use an external database service (PostgreSQL, MySQL) and update `DATABASE_PATH` to use a connection string
+     - **For testing**: The database will reset on each deployment, which is fine for development
    - Only one bot instance should run at a time (stop local instance when deploying)
    - Database persistence: SQLite files may not persist on some platforms (consider using volumes or external databases)
 

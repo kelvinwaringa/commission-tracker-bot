@@ -17,8 +17,15 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN is required! Set it as an environment variable.")
 
-# Database
-DATABASE_PATH = os.getenv("DATABASE_PATH", "commissions.db")
+# Database - Use persistent storage if available, otherwise use workspace
+# Koyeb persistent volumes are typically at /persistent or /data
+import os.path
+persistent_path = os.getenv("PERSISTENT_STORAGE_PATH", "/persistent")
+if os.path.exists(persistent_path) and os.path.isdir(persistent_path):
+    default_db_path = os.path.join(persistent_path, "commissions.db")
+else:
+    default_db_path = "commissions.db"
+DATABASE_PATH = os.getenv("DATABASE_PATH", default_db_path)
 
 # Timezone (default: Africa/Nairobi)
 DEFAULT_TIMEZONE = os.getenv("TIMEZONE", "Africa/Nairobi")
